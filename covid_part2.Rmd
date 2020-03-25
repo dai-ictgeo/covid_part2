@@ -1,0 +1,156 @@
+---
+title: "COVID Part Two"
+author: "CDA"
+date: "March 24, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#### load in libraries ####
+# library(readstata13)
+library(RCurl)
+library(Rcpp)
+library(RColorBrewer)
+library(xlsx)
+library(tidyverse)
+library(ggstatsplot)
+library(readxl)
+library(ggthemes)
+library(magick)
+library(gganimate)
+library(googlesheets)
+library(ggrepel)
+library(rworldmap)
+library(RColorBrewer)
+
+```
+
+
+```{r, echo=FALSE}
+country_stats <- read.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQ9Puqir6LrosixgUrjvXW09b58RzIsMOIdU1AmTqdTPM-Uki2nma39SGSN9ZzkqVQid8m6DT7nSHvq/pub?gid=0&single=true&output=csv")
+
+```
+
+## Analysis
+Histogram of WHO Data
+```{r, echo=FALSE}
+country_stats_who <-
+  country_stats %>%
+  select(NAME_ENGLI:ISO3, contains("WHO"))
+  
+  
+colNames <- names(country_stats_who)[4:15]
+
+
+for(i in colNames){
+  plt <- ggplot(country_stats_who, aes_string(x=i)) +
+  geom_histogram(fill = "#9ecae1", bins = 40) +
+  ylab("Frequency") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15))
+  print(plt)
+  Sys.sleep(2)
+}  
+
+```
+
+Histogram of Hospital Beds per 10K, Doctors per 10K, Nurses per 10K
+
+```{r, echo=FALSE}
+country_stats_who <-
+  country_stats_who %>%
+  select(NAME_ENGLI:ISO3, contains("10K"))
+  
+  
+colNames <- names(country_stats_who)[4:6]
+
+for(i in colNames){
+  plt <- ggplot(country_stats_who, aes_string(x=i)) +
+  geom_histogram(fill = "#9ecae1", bins = 40) +
+  ylab("Frequency") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15))
+  print(plt)
+  Sys.sleep(2)
+}  
+
+
+
+```
+
+TOP 25
+```{r, echo=FALSE}
+country_stats_who %>% 
+                  dplyr::arrange(desc(WHO.Hospital.beds.per.10K)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, WHO.Hospital.beds.per.10K), 
+                       y = WHO.Hospital.beds.per.10K)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+```{r, echo=FALSE}
+
+country_stats_who %>% 
+                  dplyr::arrange(desc(WHO.Nursing.and.midwifery.personnel.per.10K)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, WHO.Nursing.and.midwifery.personnel.per.10K), 
+                       y = WHO.Nursing.and.midwifery.personnel.per.10K)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+```{r, echo=FALSE}
+
+country_stats_who %>% 
+                  dplyr::arrange(desc(WHO.Medical.Doctors.per.10K)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, WHO.Medical.Doctors.per.10K), 
+                       y = WHO.Medical.Doctors.per.10K)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+
+MAPS
+```{r, echo=FALSE}
+
+who_map <-
+joinCountryData2Map(country_stats_who,
+joinCode = "ISO3",
+nameJoinColumn = "ISO3")
+
+# doctors
+mapCountryData(who_map, nameColumnToPlot="WHO.Medical.Doctors.per.10K", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+# nurses
+mapCountryData(who_map, nameColumnToPlot="WHO.Nursing.and.midwifery.personnel.per.10K", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+
+# beds
+mapCountryData(who_map, nameColumnToPlot="WHO.Hospital.beds.per.10K", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+
+
+```
+
