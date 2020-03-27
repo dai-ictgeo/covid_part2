@@ -2,6 +2,8 @@
 title: "COVID Part Two"
 author: "CDA"
 date: "March 24, 2020"
+fig_width: 6 
+fig_height: 4
 output: html_document
 ---
 
@@ -60,22 +62,35 @@ Histogram of Hospital Beds per 10K, Doctors per 10K, Nurses per 10K
 ```{r, echo=FALSE}
 country_stats_who <-
   country_stats_who %>%
-  select(NAME_ENGLI:ISO3, contains("10K"))
+  select(NAME_ENGLI:ISO3, contains("10K")) %>%
+  `colnames<-` (c("Country", "ID", "ISO3", "beds", "nurses", "doctors"))
   
-  
-colNames <- names(country_stats_who)[4:6]
-
-for(i in colNames){
-  plt <- ggplot(country_stats_who, aes_string(x=i)) +
+ggplot(country_stats_who, aes(x = beds)) +
   geom_histogram(fill = "#9ecae1", bins = 40) +
   ylab("Frequency") + 
+  xlab("") +
+  ggtitle("Hospital Bed Density") +
   theme(axis.title.y = element_text(size = 17),
         axis.title.x = element_text(size = 17),
         axis.text = element_text(size = 15))
-  print(plt)
-  Sys.sleep(2)
-}  
 
+ggplot(country_stats_who, aes(x = nurses)) +
+  geom_histogram(fill = "#9ecae1", bins = 40) +
+  ylab("Frequency") + 
+  xlab("") +
+  ggtitle("Nursing and Midwifery Personnel per 10K ") +
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15))
+
+ggplot(country_stats_who, aes(x = doctors)) +
+  geom_histogram(fill = "#9ecae1", bins = 40) +
+  ylab("Frequency") + 
+  xlab("") +
+  ggtitle("Doctors per capita (10K)") +
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15))
 
 
 ```
@@ -83,12 +98,14 @@ for(i in colNames){
 TOP 25
 ```{r, echo=FALSE}
 country_stats_who %>% 
-                  dplyr::arrange(desc(WHO.Hospital.beds.per.10K)) %>%
+                  dplyr::arrange(desc(beds)) %>%
                   dplyr::slice(1L:25L) %>%
-  ggplot(data = ., aes(x= reorder(NAME_ENGLI, WHO.Hospital.beds.per.10K), 
-                       y = WHO.Hospital.beds.per.10K)) +
+  ggplot(data = ., aes(x= reorder(Country, beds), 
+                       y = beds)) +
   geom_col(fill = "#9ecae1") +
-  xlab("") + 
+  xlab("") +
+  ylab("") +
+  ggtitle("Hospital Bed Density") + 
   theme(axis.title.y = element_text(size = 17),
         axis.title.x = element_text(size = 17),
         axis.text = element_text(size = 15)) +
@@ -99,12 +116,14 @@ country_stats_who %>%
 ```{r, echo=FALSE}
 
 country_stats_who %>% 
-                  dplyr::arrange(desc(WHO.Nursing.and.midwifery.personnel.per.10K)) %>%
+                  dplyr::arrange(desc(nurses)) %>%
                   dplyr::slice(1L:25L) %>%
-  ggplot(data = ., aes(x= reorder(NAME_ENGLI, WHO.Nursing.and.midwifery.personnel.per.10K), 
-                       y = WHO.Nursing.and.midwifery.personnel.per.10K)) +
+  ggplot(data = ., aes(x= reorder(Country, nurses), 
+                       y = nurses)) +
   geom_col(fill = "#9ecae1") +
-  xlab("") + 
+  xlab("") +
+  ylab("") +
+  ggtitle("Nursing and Midwife Personnel per 10K") +
   theme(axis.title.y = element_text(size = 17),
         axis.title.x = element_text(size = 17),
         axis.text = element_text(size = 15)) +
@@ -115,12 +134,14 @@ country_stats_who %>%
 ```{r, echo=FALSE}
 
 country_stats_who %>% 
-                  dplyr::arrange(desc(WHO.Medical.Doctors.per.10K)) %>%
+                  dplyr::arrange(desc(doctors)) %>%
                   dplyr::slice(1L:25L) %>%
-  ggplot(data = ., aes(x= reorder(NAME_ENGLI, WHO.Medical.Doctors.per.10K), 
-                       y = WHO.Medical.Doctors.per.10K)) +
+  ggplot(data = ., aes(x= reorder(Country, doctors), 
+                       y = doctors)) +
   geom_col(fill = "#9ecae1") +
   xlab("") + 
+  ylab("") + 
+  ggtitle("Doctors per 10K") + 
   theme(axis.title.y = element_text(size = 17),
         axis.title.x = element_text(size = 17),
         axis.text = element_text(size = 15)) +
@@ -138,19 +159,190 @@ joinCode = "ISO3",
 nameJoinColumn = "ISO3")
 
 # doctors
-mapCountryData(who_map, nameColumnToPlot="WHO.Medical.Doctors.per.10K", 
+mapCountryData(who_map, nameColumnToPlot= "beds", mapTitle = "Doctors per 10K", 
                mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
                catMethod="fixedWidth", numCats = 7)
 # nurses
-mapCountryData(who_map, nameColumnToPlot="WHO.Nursing.and.midwifery.personnel.per.10K", 
+mapCountryData(who_map, nameColumnToPlot= "nurses", mapTitle = "Nursing and Midwife Personnel per 10K", 
                mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
                catMethod="fixedWidth", numCats = 7)
 
 # beds
-mapCountryData(who_map, nameColumnToPlot="WHO.Hospital.beds.per.10K", 
+mapCountryData(who_map, nameColumnToPlot= "doctors", mapTitle = "Hospital Beds per 10K", 
                mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
                catMethod="fixedWidth", numCats = 7)
 
 
 ```
+```{r, echo=FALSE}
+### GHS Index
+country_stats_ghsi <-
+  country_stats %>%
+  select(NAME_ENGLI:ISO3, contains("GHSI"))
+  
+  
+colNames <- names(country_stats_ghsi)[4:9]
 
+for(i in colNames){
+  plt <- ggplot(country_stats_ghsi, aes_string(x=i)) +
+  geom_histogram(fill = "#9ecae1", bins = 40) +
+  ylab("Frequency") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15))
+  print(plt)
+  Sys.sleep(2)
+}  
+
+```
+```{r, echo=FALSE}
+
+country_stats_ghsi %>% 
+                  dplyr::arrange(desc(GHSI.Prevent.Score..2019.)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, GHSI.Prevent.Score..2019.), 
+                       y = GHSI.Prevent.Score..2019.)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+```{r, echo=FALSE}
+
+country_stats_ghsi %>% 
+                  dplyr::arrange(desc(GHSI.Detect.Score..2019.)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, GHSI.Detect.Score..2019.), 
+                       y = GHSI.Detect.Score..2019.)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  ylab("") +
+  ggtitle("GHSI Detect Score - 2019") +
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+
+
+```{r, echo=FALSE}
+
+country_stats_ghsi %>% 
+                  dplyr::arrange(desc(GHSI.Respond.Score..2019.)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, GHSI.Respond.Score..2019.), 
+                       y = GHSI.Respond.Score..2019.)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") +
+  ylab("") +
+  ggtitle("GHSI Respond Score - 2019") +
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+
+
+
+```{r, echo=FALSE}
+
+country_stats_ghsi %>% 
+                  dplyr::arrange(desc(GHSI.Health.Score..2019.)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, GHSI.Health.Score..2019.), 
+                       y = GHSI.Health.Score..2019.)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+
+
+```{r, echo=FALSE}
+
+country_stats_ghsi %>% 
+                  dplyr::arrange(desc(GHSI.Norms.Score..2019.)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, GHSI.Norms.Score..2019.), 
+                       y = GHSI.Norms.Score..2019.)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+
+
+```{r, echo=FALSE}
+
+country_stats_ghsi %>% 
+                  dplyr::arrange(desc(GHSI.Risk.Score..2019.)) %>%
+                  dplyr::slice(1L:25L) %>%
+  ggplot(data = ., aes(x= reorder(NAME_ENGLI, GHSI.Risk.Score..2019.), 
+                       y = GHSI.Risk.Score..2019.)) +
+  geom_col(fill = "#9ecae1") +
+  xlab("") + 
+  ylab("") + 
+  ggtitle("GHSI Risk Score - 2019") + 
+  theme(axis.title.y = element_text(size = 17),
+        axis.title.x = element_text(size = 17),
+        axis.text = element_text(size = 15)) +
+  coord_flip()
+
+
+```
+
+
+```{r, echo=FALSE}
+
+ghsi_map <-
+joinCountryData2Map(country_stats_ghsi,
+joinCode = "ISO3",
+nameJoinColumn = "ISO3")
+
+# prevent
+mapCountryData(ghsi_map, mapTitle = "GHSI Prevent Score - 2019 ",
+               nameColumnToPlot="GHSI.Prevent.Score..2019.", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+# detect
+mapCountryData(ghsi_map, mapTitle="GHSI Detect Score - 2019", nameColumnToPlot="GHSI.Detect.Score..2019.",
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+
+# respond
+mapCountryData(ghsi_map, nameColumnToPlot="GHSI.Respond.Score..2019.", mapTitle="GHSI Respond Score  2019 ", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+
+# health
+mapCountryData(ghsi_map, nameColumnToPlot="GHSI.Health.Score..2019.", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+# norms
+mapCountryData(ghsi_map, nameColumnToPlot="GHSI.Norms.Score..2019.", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+
+# risk
+mapCountryData(ghsi_map, mapTitle="GHSI Risk Score - 2019 ", nameColumnToPlot="GHSI.Risk.Score..2019.", 
+               mapRegion="World", colourPalette= brewer.pal(n = 7, name = "BuPu"), 
+               catMethod="fixedWidth", numCats = 7)
+
+
+```
